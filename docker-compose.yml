@@ -27,6 +27,8 @@ services:
     restart: always
     image: grafana/grafana-oss:8.4.3
     container_name: weot-internet-of-cows-grafana
+    volumes:
+      - ./grafana_data:/var/lib/grafana:rw
     depends_on:
       - influxdb
     ports:
