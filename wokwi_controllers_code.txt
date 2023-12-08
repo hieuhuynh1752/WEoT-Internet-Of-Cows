@@ -1,20 +1,36 @@
 #include <WiFi.h>  
 #include <PubSubClient.h>
 #include <DHTesp.h>
+#include <HeartBeat.h>
+#include <cstdlib>  // For rand() function
 
 const int DHT_PIN = 15;  
+const int HB_PIN = 22;  
+double hbFrequency = 1;
+double MIN_FREQ = 0.5;
+double MAX_FREQ = 2.0;
+
 DHTesp dht; 
+HeartBeatSL hb;
+
 const char* ssid = "Wokwi-GUEST"; ///  simulated wifi (can't change name)
 const char* password = "";
-const char* mqtt_server = "test.mosquitto.org";// mosquitto server url
+const char* mqttServer = "test.mosquitto.org";// mosquitto server url
+const char* MQTT_TOPIC = "/cowlarIoTse4gd";
+const char* TEMP_TOPIC = "/temp";
+const char* PULSE_TOPIC = "/pulse";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
 unsigned long lastMsg = 0;
+unsigned long lastHbChange = 0;
+unsigned long lastHb = 0;
+
 float temp = 0;
 float hum = 0;
 
-void setup_wifi() { 
+void setupWifi() { 
   delay(10);
   Serial.println();
   Serial.print("Connecting to WiFi: ");
@@ -24,7 +40,7 @@ void setup_wifi() {
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) { 
-    delay(500);
+    delay(500); // try to reconnect in 0.5s
     Serial.print(".");
   }
 
@@ -58,9 +74,45 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(2, OUTPUT);     
   Serial.begin(115200);
-  setup_wifi(); 
-  client.setServer(mqtt_server, 1883);
+  setupWifi(); 
+  client.setServer(mqttServer, 1883);
   dht.setup(DHT_PIN, DHTesp::DHT22);
+  hb.begin(HB_PIN, hbFrequency);
+}
+
+void publishData(String temp, String pulse){
+  String topicTemp = String(MQTT_TOPIC) + TEMP_TOPIC;
+  String topicPulse = String(MQTT_TOPIC) + PULSE_TOPIC;
+
+  client.publish(topicTemp.c_str(), temp.c_str()); 
+  client.publish(topicPulse.c_str(), pulse.c_str()); 
+}
+
+void printData(String temperature, String pulse){
+  Serial.println("Temperature: " + temperature);
+  Serial.println("Pulse: " + pulse);
+}
+
+double calcPulse(double hbFrequency){
+  return hbFrequency*60; // 
+}
+
+double determineNewHbFrequency(double hbFrequency){ 
+  double delta = (randomPercent() > 70) ? 0.5 : 0.2;
+  bool isIncreasing = randomPercent() > 50;
+  double newFreq = isIncreasing ? hbFrequency + delta : hbFrequency - delta;
+
+  if (newFreq < MIN_FREQ){
+    newFreq = MIN_FREQ;
+  } else if (newFreq > MAX_FREQ){
+    newFreq = MAX_FREQ;
+  }
+
+  return newFreq;
+}
+
+int randomPercent() {
+    return rand() % 101;  // random value between 0 and 100
 }
 
 void loop() {
@@ -72,18 +124,25 @@ void loop() {
   client.loop(); // important to call regularly in the main loop to ensure that the MQTT client operates properly
 
   unsigned long now = millis();
+
+  hb.beat();
+
+  if (now - lastHbChange > 5000) { // update heart beat every 5s
+    lastHbChange = now;
+    hbFrequency = determineNewHbFrequency(hbFrequency);
+    String newFreq = String(hbFrequency, 2);
+    hb.setFrequency(hbFrequency);
+    Serial.println("New frequency: " + newFreq);
+  }
+
   if (now - lastMsg > 2000) { // publish every 2s
     lastMsg = now;
     TempAndHumidity  data = dht.getTempAndHumidity();
-    
-    String temp = String(data.temperature, 2);
-    client.publish("/cowlarIoTse4gd/temp", temp.c_str()); 
-    String hum = String(data.humidity, 1); 
-    client.publish("/cowlarIoTse4gd/hum", hum.c_str());
 
-    Serial.print("Temperature: ");
-    Serial.println(temp);
-    Serial.print("Humidity: ");
-    Serial.println(hum);
+    String temp = String(data.temperature, 2);
+    String pulse = String(calcPulse(hbFrequency), 2);
+
+    publishData(temp, pulse);
+    printData(temp, pulse);
   }
 }
