@@ -3,15 +3,19 @@
 #include <DHTesp.h>
 #include <HeartBeat.h>
 #include <cstdlib>  // For rand() function
+#include <Adafruit_Sensor.h>
+#include <Adafruit_MPU6050.h>
+#include <Wire.h>
 
 const int DHT_PIN = 15;  
-const int HB_PIN = 22;  
-double hbFrequency = 1;
+const int HB_PIN = 23;  
 double MIN_FREQ = 0.5;
 double MAX_FREQ = 2.0;
+// accelerometer has to be connected to pins 22 and 21
 
 DHTesp dht; 
 HeartBeatSL hb;
+Adafruit_MPU6050 mpu;
 
 const char* ssid = "Wokwi-GUEST"; ///  simulated wifi (can't change name)
 const char* password = "";
@@ -19,6 +23,7 @@ const char* mqttServer = "test.mosquitto.org";// mosquitto server url
 const char* MQTT_TOPIC = "/cowlarIoTse4gd";
 const char* TEMP_TOPIC = "/temp";
 const char* PULSE_TOPIC = "/pulse";
+const char* SPEED_TOPIC = "/speed";
 const char* IS_RUNNING_TOPIC = "/isRunning";
 
 WiFiClient espClient;
@@ -27,6 +32,9 @@ PubSubClient client(espClient);
 unsigned long lastMsg = 0;
 unsigned long lastHbChange = 0;
 unsigned long lastHb = 0;
+
+double hbFrequency = 1;
+double movementSpeed = 0;
 
 bool isCowRunning = false;
 
@@ -69,17 +77,18 @@ void reconnect() {
     }}
 }
 
-void publishData(String temp, String pulse){
+void publishData(String temp, String pulse, String speed){
   String topicTemp = String(MQTT_TOPIC) + TEMP_TOPIC;
   String topicPulse = String(MQTT_TOPIC) + PULSE_TOPIC;
+  String topicSpeed = String(MQTT_TOPIC) + SPEED_TOPIC;
 
   client.publish(topicTemp.c_str(), temp.c_str()); 
   client.publish(topicPulse.c_str(), pulse.c_str()); 
+  client.publish(topicSpeed.c_str(), speed.c_str()); 
 }
 
-void printData(String temperature, String pulse){
-  Serial.println("Temperature: " + temperature);
-  Serial.println("Pulse: " + pulse);
+void printData(String temperature, String pulse, String speed){
+  Serial.println("Temperature: " + temperature + " Pulse: " + pulse + " Speed: " + speed);
 }
 
 double calcPulse(double hbFrequency){
@@ -114,6 +123,20 @@ double determineNewHbFrequency(double hbFrequency){
   return newFreq;
 }
 
+double getMovementSpeed(){
+  sensors_event_t acc, gcc, temp;
+  mpu.getEvent(&acc, &gcc, &temp);
+  movementSpeed = acc.acceleration.x;
+
+  if (movementSpeed < 0){
+    movementSpeed = 0;
+  } else if (movementSpeed > 15){
+    movementSpeed = 15;
+  }
+
+  return movementSpeed;
+} 
+
 int randomPercent() {
     return rand() % 101;  // random value between 0 and 100
 }
@@ -136,7 +159,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
-  // put your setup code here, to run once:
   pinMode(2, OUTPUT);     
   Serial.begin(115200);
   setupWifi(); 
@@ -144,6 +166,7 @@ void setup() {
   client.setCallback(callback); 
   dht.setup(DHT_PIN, DHTesp::DHT22);
   hb.begin(HB_PIN, hbFrequency);
+  mpu.begin();
 }
 
 
@@ -167,14 +190,17 @@ void loop() {
     Serial.println("New frequency: " + newFreq);
   }
 
+  movementSpeed = getMovementSpeed();
+
   if (now - lastMsg > 2000) { // publish every 3s
     lastMsg = now;
     TempAndHumidity  data = dht.getTempAndHumidity();
 
     String temp = String(data.temperature, 2);
     String pulse = String(calcPulse(hbFrequency), 2);
+    String speed = String(movementSpeed, 2);
 
-    publishData(temp, pulse);
-    printData(temp, pulse);
+    publishData(temp, pulse, speed);
+    printData(temp, pulse, speed);
   }
 }
