@@ -19,6 +19,7 @@ const char* mqttServer = "test.mosquitto.org";// mosquitto server url
 const char* MQTT_TOPIC = "/cowlarIoTse4gd";
 const char* TEMP_TOPIC = "/temp";
 const char* PULSE_TOPIC = "/pulse";
+const char* IS_RUNNING_TOPIC = "/isRunning";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -27,8 +28,7 @@ unsigned long lastMsg = 0;
 unsigned long lastHbChange = 0;
 unsigned long lastHb = 0;
 
-float temp = 0;
-float hum = 0;
+bool isCowRunning = false;
 
 void setupWifi() { 
   delay(10);
@@ -52,15 +52,14 @@ void setupWifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) { 
-  }
-
 void reconnect() { 
   while (!client.connected()) {
     Serial.print("Reconnecting to MQTT broker...");
     String clientId = "ESP32Client-";
     clientId += String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
+      String topicIsRunning = String(MQTT_TOPIC) + IS_RUNNING_TOPIC;
+      client.subscribe(topicIsRunning.c_str());
       Serial.println("Connected");
     } else {
       Serial.print("failed, rc=");
@@ -68,16 +67,6 @@ void reconnect() {
       Serial.println(" try again in 1 second");
       delay(1000);
     }}
-}
-
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(2, OUTPUT);     
-  Serial.begin(115200);
-  setupWifi(); 
-  client.setServer(mqttServer, 1883);
-  dht.setup(DHT_PIN, DHTesp::DHT22);
-  hb.begin(HB_PIN, hbFrequency);
 }
 
 void publishData(String temp, String pulse){
@@ -97,9 +86,23 @@ double calcPulse(double hbFrequency){
   return hbFrequency*60; // 
 }
 
-double determineNewHbFrequency(double hbFrequency){ 
-  double delta = (randomPercent() > 70) ? 0.5 : 0.2;
-  bool isIncreasing = randomPercent() > 50;
+double determineNewHbFrequency(double hbFrequency){
+  double delta;
+  bool isIncreasing;
+
+  if (isCowRunning){
+    isIncreasing = true;
+    delta = (randomPercent() > 30) ? 0.07 : 0.03;
+  } else {
+    if (hbFrequency > 1){
+      isIncreasing = false;
+      delta = (randomPercent() > 70) ? 0.07 : 0.02;
+    } else {
+      isIncreasing = randomPercent() > 60;
+      delta = (randomPercent() > 70) ? 0.03 : 0.01;
+    }
+  }
+
   double newFreq = isIncreasing ? hbFrequency + delta : hbFrequency - delta;
 
   if (newFreq < MIN_FREQ){
@@ -115,6 +118,35 @@ int randomPercent() {
     return rand() % 101;  // random value between 0 and 100
 }
 
+void callback(char* topic, byte* payload, unsigned int length) { 
+  Serial.print("Is cow running? -> ");
+
+  payload[length] = '\0';  // Ensure null-termination
+  char* payloadStr = reinterpret_cast<char*>(payload);
+
+  bool isRunning = strcmp(payloadStr, "true") == 0;
+
+  if (isRunning) {
+    Serial.println("Yes");
+  } else {
+    Serial.println("No");
+  }
+
+  isCowRunning = isRunning;
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(2, OUTPUT);     
+  Serial.begin(115200);
+  setupWifi(); 
+  client.setServer(mqttServer, 1883);
+  client.setCallback(callback); 
+  dht.setup(DHT_PIN, DHTesp::DHT22);
+  hb.begin(HB_PIN, hbFrequency);
+}
+
+
 void loop() {
   delay(10); // this speeds up the simulation
 
@@ -127,7 +159,7 @@ void loop() {
 
   hb.beat();
 
-  if (now - lastHbChange > 5000) { // update heart beat every 5s
+  if (now - lastHbChange > 1000) { // update heart beat every 5s
     lastHbChange = now;
     hbFrequency = determineNewHbFrequency(hbFrequency);
     String newFreq = String(hbFrequency, 2);
@@ -135,7 +167,7 @@ void loop() {
     Serial.println("New frequency: " + newFreq);
   }
 
-  if (now - lastMsg > 2000) { // publish every 2s
+  if (now - lastMsg > 2000) { // publish every 3s
     lastMsg = now;
     TempAndHumidity  data = dht.getTempAndHumidity();
 
