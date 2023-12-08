@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+
+  influxdb:
+    restart: always
+    image: influxdb:2.1.1
+    container_name: weot-internet-of-cows-influxdb
+    env_file:
+      - .env
+    entrypoint: [ "./entrypoint.sh" ]
+    ports:
+      - ${DOCKER_INFLUXDB_INIT_PORT}:8086
+
+  telegraf:
+    restart: always
+    container_name: weot-internet-of-cows-telegraf
+    image: telegraf:1.19
+    volumes:
+      - ${TELEGRAF_CFG_PATH}:/etc/telegraf/telegraf.conf:rw
+    env_file:
+      - .env
+    depends_on:
+      - influxdb
+
+  grafana:
+    restart: always
+    image: grafana/grafana-oss:8.4.3
+    container_name: weot-internet-of-cows-grafana
+    depends_on:
+      - influxdb
+    ports:
+      - 3000:3000
+
+  mosquitto-container:
+    restart: always
+    container_name: weot-internet-of-cows-mosquitto-container
+    image: eclipse-mosquitto
+    volumes:
+      - ${MOSQUITTO_CFG_PATH}:/mosquitto/config/mosquitto.conf:ro
+    env_file:
+      - .env
+    ports:
+      - 1883:1883
+
+  node-red:
+    restart: always
+    container_name: weot-internet-of-cows-nodered-1
+    build: docker-nodered/
+    ports:
+      - 1880:1880
