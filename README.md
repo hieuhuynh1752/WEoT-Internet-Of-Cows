@@ -1,10 +1,15 @@
 **Internet of Cows**
 
 **Credentials**
-InfluxDb:	- username: weot
-		      - password: internetofcows
-Grafana:	- username: admin
-		      - password: admin
+
+InfluxDb:	
+	- username: weot
+	- password: internetofcows
+
+Grafana:	
+	- username: admin
+ 	- password: admin
+  
 InfluxDb token for Node-RED:
 tfg7A3pr7Y2obvYNsSikeYXtHJk9R3z_yvSRm6os_T_6WaXziGDRiEPY4vk9xBy6eA7ErRX6hjRM49Y8rAjifQ==
 
