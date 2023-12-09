@@ -1,0 +1,3 @@
+{{ define "deadCowAlertTemplate" }}
+  The temperature and heart rate of your cow are decreasing consistently!
+{{ end }}

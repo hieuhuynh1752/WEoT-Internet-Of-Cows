@@ -1,0 +1,3 @@
+{{ define "cowAlertTemplate" }}
+  The temperature of your cow is increased!
+{{ end }}
