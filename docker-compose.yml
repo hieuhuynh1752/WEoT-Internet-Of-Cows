@@ -9,6 +9,9 @@ services:
     env_file:
       - .env
     entrypoint: [ "./entrypoint.sh" ]
+    volumes:
+      - ./influxdb_data/data:/var/lib/influxdb2:rw
+      - ./influxdb_data/etc:/etc/influxdb2/influx-configs:rw
     ports:
       - ${DOCKER_INFLUXDB_INIT_PORT}:8086
 
@@ -33,17 +36,6 @@ services:
       - influxdb
     ports:
       - 3000:3000
-
-  mosquitto-container:
-    restart: always
-    container_name: weot-internet-of-cows-mosquitto-container
-    image: eclipse-mosquitto
-    volumes:
-      - ${MOSQUITTO_CFG_PATH}:/mosquitto/config/mosquitto.conf:ro
-    env_file:
-      - .env
-    ports:
-      - 1883:1883
 
   node-red:
     restart: always

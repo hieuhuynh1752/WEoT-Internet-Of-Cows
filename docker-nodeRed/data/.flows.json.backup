@@ -1,0 +1,278 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "c0a070139d55e7cf",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": false,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "5f18302ec0bcef38",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "weot",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://localhost:8086",
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "7c0113c6762a1548",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "weot",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://weot-internet-of-cows-influxdb:8086",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "99e80565a8f35c30",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1320,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "d6ac93bd6e9bb933",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Save to InfluxDB",
+        "func": "msg.topic=\"InfluxData\"\nvar heartRate=global.get('heartRate')\nvar temp=global.get('temperature')\nvar accelerometer=global.get('accelerometer') ?? 0\nvar timestamp=global.get('timestamp')\nmsg.payload = {\n    \"timestamp\": timestamp,\n    \"heartRate\": heartRate,\n    \"temperature\": temp,\n    \"accelerometer\": accelerometer\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 560,
+        "wires": [
+            [
+                "99e80565a8f35c30",
+                "6d928b22c62e3908"
+            ]
+        ]
+    },
+    {
+        "id": "cacabe18f206d4c9",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/temp",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c0a070139d55e7cf",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 280,
+        "y": 560,
+        "wires": [
+            [
+                "fb7a6327cb6d1205"
+            ]
+        ]
+    },
+    {
+        "id": "fb7a6327cb6d1205",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set Global temp value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "temperature",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 580,
+        "y": 560,
+        "wires": [
+            [
+                "d6ac93bd6e9bb933"
+            ]
+        ]
+    },
+    {
+        "id": "6d928b22c62e3908",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "7c0113c6762a1548",
+        "name": "InternetOfCowsDB",
+        "measurement": "Cow-status",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "WEoT",
+        "bucket": "WEoT-InternetOfCows",
+        "x": 1350,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "1776bebb0a61775b",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/pulse",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c0a070139d55e7cf",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 280,
+        "y": 660,
+        "wires": [
+            [
+                "513c883a95a46444"
+            ]
+        ]
+    },
+    {
+        "id": "5069127ac41fde50",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/speed",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c0a070139d55e7cf",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 280,
+        "y": 740,
+        "wires": [
+            [
+                "6e34432f01569a2c"
+            ]
+        ]
+    },
+    {
+        "id": "513c883a95a46444",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set Global heartRate value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "heartRate",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 580,
+        "y": 660,
+        "wires": [
+            [
+                "d6ac93bd6e9bb933"
+            ]
+        ]
+    },
+    {
+        "id": "6e34432f01569a2c",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set Global speed value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "accelerometer",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 740,
+        "wires": [
+            [
+                "d6ac93bd6e9bb933"
+            ]
+        ]
+    }
+]

@@ -1,0 +1,20 @@
+["./influxdb/influxdb.conf"]
+  url = "http://172.25.0.3:8086"
+  token = "tfg7A3pr7Y2obvYNsSikeYXtHJk9R3z_yvSRm6os_T_6WaXziGDRiEPY4vk9xBy6eA7ErRX6hjRM49Y8rAjifQ=="
+  org = "WEoT"
+  active = true
+# 
+# [eu-central]
+#   url = "https://eu-central-1-1.aws.cloud2.influxdata.com"
+#   token = "XXX"
+#   org = ""
+# 
+# [us-central]
+#   url = "https://us-central1-1.gcp.cloud2.influxdata.com"
+#   token = "XXX"
+#   org = ""
+# 
+# [us-west]
+#   url = "https://us-west-2-1.aws.cloud2.influxdata.com"
+#   token = "XXX"
+#   org = ""
