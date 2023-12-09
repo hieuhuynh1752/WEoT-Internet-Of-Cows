@@ -89,7 +89,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1320,
-        "y": 480,
+        "y": 700,
         "wires": []
     },
     {
@@ -104,8 +104,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1030,
-        "y": 560,
+        "x": 1010,
+        "y": 660,
         "wires": [
             [
                 "99e80565a8f35c30",
@@ -176,7 +176,7 @@
         "org": "WEoT",
         "bucket": "WEoT-InternetOfCows",
         "x": 1350,
-        "y": 380,
+        "y": 600,
         "wires": []
     },
     {
@@ -274,5 +274,83 @@
                 "d6ac93bd6e9bb933"
             ]
         ]
+    },
+    {
+        "id": "d920070e3beb9f25",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 290,
+        "y": 320,
+        "wires": [
+            [
+                "06fbc83112058fa6"
+            ]
+        ]
+    },
+    {
+        "id": "a69ba43beefddbc8",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "x": 290,
+        "y": 380,
+        "wires": [
+            [
+                "06fbc83112058fa6"
+            ]
+        ]
+    },
+    {
+        "id": "06fbc83112058fa6",
+        "type": "mqtt out",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/isRunning",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a070139d55e7cf",
+        "x": 560,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "902b3d7d7fde492c",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "for simulating the heartbeat",
+        "info": "",
+        "x": 340,
+        "y": 260,
+        "wires": []
     }
 ]

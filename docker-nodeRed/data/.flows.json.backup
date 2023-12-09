@@ -89,7 +89,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1320,
-        "y": 480,
+        "y": 700,
         "wires": []
     },
     {
@@ -97,15 +97,15 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Save to InfluxDB",
-        "func": "msg.topic=\"InfluxData\"\nvar heartRate=global.get('heartRate')\nvar temp=global.get('temperature')\nvar accelerometer=global.get('accelerometer') ?? 0\nvar timestamp=global.get('timestamp')\nmsg.payload = {\n    \"timestamp\": timestamp,\n    \"heartRate\": heartRate,\n    \"temperature\": temp,\n    \"accelerometer\": accelerometer\n}\nreturn msg;",
+        "func": "msg.topic=\"InfluxData\"\nvar heartRate=global.get('heartRate')\nvar temp=global.get('temperature')\nvar accelerometer=global.get('accelerometer') ?? 0\nmsg.payload = {\n    \"heartRate\": heartRate,\n    \"temperature\": temp,\n    \"accelerometer\": accelerometer\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1030,
-        "y": 560,
+        "x": 1010,
+        "y": 660,
         "wires": [
             [
                 "99e80565a8f35c30",
@@ -176,7 +176,7 @@
         "org": "WEoT",
         "bucket": "WEoT-InternetOfCows",
         "x": 1350,
-        "y": 380,
+        "y": 600,
         "wires": []
     },
     {
@@ -257,7 +257,7 @@
             {
                 "t": "set",
                 "p": "accelerometer",
-                "pt": "msg",
+                "pt": "global",
                 "to": "payload",
                 "tot": "msg"
             }
