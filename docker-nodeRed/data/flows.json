@@ -97,15 +97,15 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Save to InfluxDB",
-        "func": "msg.topic=\"InfluxData\"\nvar heartRate=global.get('heartRate')\nvar temp=global.get('temperature')\nvar accelerometer=global.get('accelerometer') ?? 0\nmsg.payload = {\n    \"heartRate\": heartRate,\n    \"temperature\": temp,\n    \"accelerometer\": accelerometer\n}\nreturn msg;",
+        "func": "msg.topic=\"InfluxData\"\nmsg.payload = {\n    \"heartRate\": msg.payload.heartRate,\n    \"temperature\": msg.payload.temperature,\n    \"accelerometer\": msg.payload.accelerometer ?? 0,\n    \"area\": msg.payload.area,\n    \"cowId\": msg.payload.cowId\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1010,
-        "y": 660,
+        "x": 1050,
+        "y": 680,
         "wires": [
             [
                 "99e80565a8f35c30",
@@ -118,7 +118,7 @@
         "type": "mqtt in",
         "z": "f6f2187d.f17ca8",
         "name": "",
-        "topic": "/cowlarIoTse4gd/temp",
+        "topic": "/cowlarIoTse4gd/area/id/temp",
         "qos": "2",
         "datatype": "auto-detect",
         "broker": "c0a070139d55e7cf",
@@ -126,7 +126,7 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 280,
+        "x": 300,
         "y": 560,
         "wires": [
             [
@@ -138,14 +138,21 @@
         "id": "fb7a6327cb6d1205",
         "type": "change",
         "z": "f6f2187d.f17ca8",
-        "name": "set Global temp value",
+        "name": "set temp value",
         "rules": [
             {
                 "t": "set",
-                "p": "temperature",
-                "pt": "global",
+                "p": "payload",
+                "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "temperature",
+                "tot": "str"
             }
         ],
         "action": "",
@@ -153,11 +160,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 580,
+        "x": 560,
         "y": 560,
         "wires": [
             [
-                "d6ac93bd6e9bb933"
+                "b1cebc2450feddf9"
             ]
         ]
     },
@@ -184,7 +191,7 @@
         "type": "mqtt in",
         "z": "f6f2187d.f17ca8",
         "name": "",
-        "topic": "/cowlarIoTse4gd/pulse",
+        "topic": "/cowlarIoTse4gd/area/id/pulse",
         "qos": "2",
         "datatype": "auto-detect",
         "broker": "c0a070139d55e7cf",
@@ -192,7 +199,7 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 280,
+        "x": 300,
         "y": 660,
         "wires": [
             [
@@ -205,7 +212,7 @@
         "type": "mqtt in",
         "z": "f6f2187d.f17ca8",
         "name": "",
-        "topic": "/cowlarIoTse4gd/speed",
+        "topic": "/cowlarIoTse4gd/area/id/speed",
         "qos": "2",
         "datatype": "auto-detect",
         "broker": "c0a070139d55e7cf",
@@ -213,7 +220,7 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 280,
+        "x": 290,
         "y": 740,
         "wires": [
             [
@@ -225,14 +232,21 @@
         "id": "513c883a95a46444",
         "type": "change",
         "z": "f6f2187d.f17ca8",
-        "name": "set Global heartRate value",
+        "name": "set heartRate value",
         "rules": [
             {
                 "t": "set",
-                "p": "heartRate",
-                "pt": "global",
+                "p": "payload",
+                "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "heartRate",
+                "tot": "str"
             }
         ],
         "action": "",
@@ -240,11 +254,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 580,
+        "x": 550,
         "y": 660,
         "wires": [
             [
-                "d6ac93bd6e9bb933"
+                "b1cebc2450feddf9"
             ]
         ]
     },
@@ -252,14 +266,21 @@
         "id": "6e34432f01569a2c",
         "type": "change",
         "z": "f6f2187d.f17ca8",
-        "name": "set Global speed value",
+        "name": "set speed value",
         "rules": [
             {
                 "t": "set",
-                "p": "accelerometer",
-                "pt": "global",
+                "p": "payload",
+                "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "accelerometer",
+                "tot": "str"
             }
         ],
         "action": "",
@@ -267,11 +288,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 560,
+        "x": 540,
         "y": 740,
         "wires": [
             [
-                "d6ac93bd6e9bb933"
+                "b1cebc2450feddf9"
             ]
         ]
     },
@@ -351,6 +372,161 @@
         "info": "",
         "x": 340,
         "y": 260,
+        "wires": []
+    },
+    {
+        "id": "345f0f53481b8401",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/area",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c0a070139d55e7cf",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 320,
+        "y": 840,
+        "wires": [
+            [
+                "4960aef44992a8e6"
+            ]
+        ]
+    },
+    {
+        "id": "4893b335927f8dbb",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "/cowlarIoTse4gd/area/id",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c0a070139d55e7cf",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 350,
+        "y": 940,
+        "wires": [
+            [
+                "b2343fe1d6aedbdb"
+            ]
+        ]
+    },
+    {
+        "id": "4960aef44992a8e6",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set area value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "parts.area",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "area",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 840,
+        "wires": [
+            [
+                "b1cebc2450feddf9"
+            ]
+        ]
+    },
+    {
+        "id": "b2343fe1d6aedbdb",
+        "type": "change",
+        "z": "f6f2187d.f17ca8",
+        "name": "set id value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "cowId",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 590,
+        "y": 940,
+        "wires": [
+            [
+                "b1cebc2450feddf9"
+            ]
+        ]
+    },
+    {
+        "id": "b1cebc2450feddf9",
+        "type": "join",
+        "z": "f6f2187d.f17ca8",
+        "name": "join value object",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "5",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 830,
+        "y": 680,
+        "wires": [
+            [
+                "d6ac93bd6e9bb933",
+                "2ba91fc5c86a5c98"
+            ]
+        ]
+    },
+    {
+        "id": "2ba91fc5c86a5c98",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 780,
         "wires": []
     }
 ]
