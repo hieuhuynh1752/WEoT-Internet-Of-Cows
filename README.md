@@ -22,7 +22,7 @@ tfg7A3pr7Y2obvYNsSikeYXtHJk9R3z_yvSRm6os_T_6WaXziGDRiEPY4vk9xBy6eA7ErRX6hjRM49Y8
   5.1) Login with the credentials
 6) Open Grafana on http://localhost:3000
   6.1) Login with the credentials
-7) Open Wokwi project on https://wokwi.com/projects/383544447455853569
+7) Open Wokwi project on [Cow 1 | https://wokwi.com/projects/384205732803068929], [Cow 2 | https://wokwi.com/projects/384255363186361345], [Cow 5 |https://wokwi.com/projects/384255396139962369]
   7.1) Start the device simulation by pressing the play button ▶️
   7.2) The device will be simulating only if it’s on the active screen (if you have another tab open it will go idle, and continue when you are back at it, you can counter this by splitting your browsers screen and looking at the multiple tabs at the same time)
   7.3) Wait for the device to connect to Wifi and MQTT server
